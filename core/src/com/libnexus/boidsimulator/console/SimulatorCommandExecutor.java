@@ -1,23 +1,20 @@
 package com.libnexus.boidsimulator.console;
 
-import com.badlogic.gdx.graphics.Color;
 import com.libnexus.boidsimulator.BoidSimulator;
 import com.libnexus.boidsimulator.World;
 import com.libnexus.boidsimulator.api.plugin.Plugin;
-import com.libnexus.boidsimulator.entity.effect.Effect;
 import com.libnexus.boidsimulator.entity.boid.Boid;
 import com.libnexus.boidsimulator.entity.boid.BoidAgency;
 import com.libnexus.boidsimulator.entity.effect.ExplosionEffect;
-import com.libnexus.boidsimulator.math.Vector2f;
+import com.libnexus.boidsimulator.util.Colour;
+import com.libnexus.boidsimulator.util.Vector2f;
 import com.strongjoshua.console.CommandExecutor;
 import com.strongjoshua.console.LogLevel;
 import com.strongjoshua.console.annotation.ConsoleDoc;
 import com.strongjoshua.console.annotation.HiddenCommand;
 
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Random;
 
 import static com.libnexus.boidsimulator.World.RANDOM;
 
@@ -38,7 +35,7 @@ public class SimulatorCommandExecutor extends CommandExecutor {
 
         if (qualifier.equals("*")) {
             for (Boid boid : World.boids())
-                World.effects().add(new ExplosionEffect(boid.currLocation, boid.currColour, new Random().nextInt(80) + 80, 50, 1));
+                ExplosionEffect.forBoid(boid);
             World.boids().clear();
             qualifier = "boid";
         } else {
@@ -173,13 +170,13 @@ public class SimulatorCommandExecutor extends CommandExecutor {
         Integer green = commandArguments.intAttributes.getOrDefault("g", 255);
         Integer blue = commandArguments.intAttributes.getOrDefault("b", 255);
 
-        boid.currColour = new Color(red, green, blue, 1);
+        boid.currColour = Colour.fromRGB(red, green, blue, 1);
 
         boid.currVisualRange = commandArguments.intAttributes.getOrDefault("vr", 150);
         boid.currSpeedLimitUpper = commandArguments.intAttributes.getOrDefault("mxs", 7);
         boid.currSpeedLimitLower = commandArguments.intAttributes.getOrDefault("mns", 4);
 
-        boidAgency.spawn(boid);
+        World.boids().add(boid);
 
         boidSimulator.selected = boid;
     }

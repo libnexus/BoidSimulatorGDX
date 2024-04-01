@@ -1,12 +1,8 @@
 package com.libnexus.boidsimulator.api.plugin;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.libnexus.boidsimulator.BoidSimulator;
-import com.libnexus.boidsimulator.entity.boid.BoidAgency;
 
-import java.io.File;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 

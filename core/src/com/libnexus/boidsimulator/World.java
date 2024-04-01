@@ -1,12 +1,11 @@
 package com.libnexus.boidsimulator;
 
 import com.badlogic.gdx.Gdx;
-import com.libnexus.boidsimulator.entity.effect.Effect;
 import com.libnexus.boidsimulator.entity.boid.Boid;
 import com.libnexus.boidsimulator.entity.boid.BoidAgency;
+import com.libnexus.boidsimulator.entity.effect.Effect;
 import com.libnexus.boidsimulator.entity.obstacle.Obstacle;
 
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;

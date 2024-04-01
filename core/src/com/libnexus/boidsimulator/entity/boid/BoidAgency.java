@@ -1,10 +1,8 @@
 package com.libnexus.boidsimulator.entity.boid;
 
 import com.libnexus.boidsimulator.World;
-import com.libnexus.boidsimulator.entity.boid.Boid;
-import com.libnexus.boidsimulator.math.Vector2f;
+import com.libnexus.boidsimulator.util.Vector2f;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

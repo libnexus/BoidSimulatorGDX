@@ -7,7 +7,8 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.libnexus.boidsimulator.World;
 import com.libnexus.boidsimulator.entity.obstacle.Obstacle;
-import com.libnexus.boidsimulator.math.Vector2f;
+import com.libnexus.boidsimulator.util.Colour;
+import com.libnexus.boidsimulator.util.Vector2f;
 
 import java.util.LinkedList;
 
@@ -48,7 +49,7 @@ public class Boid {
         if (shynessFactor == null) shynessFactor = 0.05f;
         if (centringFactor == null) centringFactor = 0.002f;
         if (matchingFactor == null) matchingFactor = 0.03f;
-        if (colour == null) colour = new Color(0, 255, 0, 1);
+        if (colour == null) colour = Colour.fromRGB(0, 255, 0, 1);
 
         this.agency = agency;
         initLocation = currLocation = location;
@@ -74,6 +75,7 @@ public class Boid {
 
     public void flyTowardsCentre() {
         currVelocity.add(perceivedCentre().subtracted(currLocation).multipliedBy(currCentringFactor));
+
         matchVelocity();
     }
 
@@ -170,30 +172,27 @@ public class Boid {
     public void draw(ShapeRenderer shapeRenderer) {
         shapeRenderer.setColor(currColour);
         Vector2f tail = history.peekFirst();
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        shapeRenderer.set(ShapeRenderer.ShapeType.Filled);
         shapeRenderer.circle(currLocation.x, currLocation.y, 5);
         if (tail != null) shapeRenderer.line(new Vector2(tail.x, tail.y), new Vector2(currLocation.x, currLocation.y));
-        shapeRenderer.end();
     }
 
     public void drawFov(ShapeRenderer shapeRenderer) {
-        shapeRenderer.setColor(255 - currColour.r, 255 - currColour.g, 255 - currColour.b, 1);
+        shapeRenderer.setColor(currColour);
         Vector2f centre = perceivedCentre();
 
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.set(ShapeRenderer.ShapeType.Line);
         for (Boid boid : World.boids()) {
             if (boid == this || !(currLocation.distance(boid.currLocation) < currVisualRange)) continue;
 
             shapeRenderer.line(new Vector2(currLocation.x, currLocation.y), new Vector2(boid.currLocation.x, boid.currLocation.y));
         }
         shapeRenderer.line(new Vector2(centre.x, centre.y), new Vector2(currLocation.x, currLocation.y));
-        shapeRenderer.end();
 
         Gdx.gl.glLineWidth(1);
 
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.set(ShapeRenderer.ShapeType.Line);
         shapeRenderer.circle(currLocation.x, currLocation.y, currVisualRange);
         shapeRenderer.circle(centre.x, centre.y, 10);
-        shapeRenderer.end();
     }
 }

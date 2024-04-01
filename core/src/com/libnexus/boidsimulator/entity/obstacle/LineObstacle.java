@@ -4,9 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
-import com.libnexus.boidsimulator.World;
-import com.libnexus.boidsimulator.entity.boid.Boid;
-import com.libnexus.boidsimulator.math.Vector2f;
+import com.libnexus.boidsimulator.util.Vector2f;
 
 public class LineObstacle implements Obstacle {
     private final Color colour;
@@ -20,7 +18,7 @@ public class LineObstacle implements Obstacle {
 
     @Override
     public Vector2f[] vertices() {
-        return new Vector2f[]{ a, b };
+        return new Vector2f[]{a, b};
     }
 
     @Override
@@ -32,8 +30,7 @@ public class LineObstacle implements Obstacle {
     public void draw(ShapeRenderer shapeRenderer) {
         Gdx.gl.glLineWidth(1);
         shapeRenderer.setColor(colour);
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.set(ShapeRenderer.ShapeType.Line);
         shapeRenderer.line(new Vector2(a.x, a.y), new Vector2(b.x, b.y));
-        shapeRenderer.end();
     }
 }

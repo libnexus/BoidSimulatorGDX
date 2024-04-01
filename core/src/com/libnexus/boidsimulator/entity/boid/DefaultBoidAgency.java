@@ -2,9 +2,7 @@ package com.libnexus.boidsimulator.entity.boid;
 
 import com.badlogic.gdx.Input;
 import com.libnexus.boidsimulator.World;
-import com.libnexus.boidsimulator.entity.boid.Boid;
-import com.libnexus.boidsimulator.entity.boid.BoidAgency;
-import com.libnexus.boidsimulator.math.Vector2f;
+import com.libnexus.boidsimulator.util.Vector2f;
 
 public class DefaultBoidAgency extends BoidAgency {
     @Override
@@ -34,13 +32,16 @@ public class DefaultBoidAgency extends BoidAgency {
 
     @Override
     public void killAll() {
-        World.boids().removeIf(boid -> boid.getClass() == Boid.class);
+        World.boids().removeIf(boid -> {
+            return boid.getClass() == Boid.class;
+        });
     }
 
     @Override
     public void kill(Boid boid) {
-        if (boid.getClass() == Boid.class)
+        if (boid.getClass() == Boid.class) {
             World.boids().remove(boid);
+        }
     }
 
     public void setCurrValues(String name, float value) {

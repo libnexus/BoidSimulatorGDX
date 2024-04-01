@@ -2,49 +2,54 @@ package com.libnexus.boidsimulator.entity.effect;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.libnexus.boidsimulator.math.Vector2f;
+import com.libnexus.boidsimulator.World;
+import com.libnexus.boidsimulator.entity.boid.Boid;
+import com.libnexus.boidsimulator.util.Vector2f;
 
-public class ExplosionEffect implements Effect {
-    public final Vector2f LOCATION;
-    public final Color COLOUR;
-    public final int FRAME_INTERVAL;
-    public final int MAX_SIZE;
-    public final int GROWTH_STEP;
+public class ExplosionEffect extends Effect {
+    public final Vector2f location;
+    public final Color colour;
+    public final int frameInterval;
+    public final int maxSize;
+    public final int growthStep;
 
     private int life = 0;
     private int size = 0;
 
     public ExplosionEffect(Vector2f location, Color colour, int frameInterval, int maxSize, int growthStep) {
-        LOCATION = location;
-        COLOUR = colour;
-        FRAME_INTERVAL = frameInterval;
-        MAX_SIZE = maxSize;
-        GROWTH_STEP = growthStep;
+        this.location = location;
+        this.colour = colour;
+        this.frameInterval = frameInterval;
+        this.maxSize = maxSize;
+        this.growthStep = growthStep;
+    }
+
+    public static void forBoid(Boid boid) {
+        World.effects().add(new ExplosionEffect(boid.currLocation, boid.currColour, 1, 50, 5));
     }
 
     @Override
     public void update() {
         life++;
 
-        if (life % FRAME_INTERVAL != 0)
+        if (life % frameInterval != 0)
             return;
 
-        if (life / FRAME_INTERVAL > MAX_SIZE)
-            size -= GROWTH_STEP;
+        if (life / frameInterval > maxSize)
+            size -= growthStep;
         else
-            size += GROWTH_STEP;
+            size += growthStep;
     }
 
     @Override
     public void draw(ShapeRenderer shapeRenderer) {
-        shapeRenderer.setColor(COLOUR);
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.circle(LOCATION.x, LOCATION.y, size);
-        shapeRenderer.end();
+        shapeRenderer.setColor(colour);
+        shapeRenderer.set(ShapeRenderer.ShapeType.Filled);
+        shapeRenderer.circle(location.x, location.y, size);
     }
 
     @Override
     public boolean isAlive() {
-        return size == MAX_SIZE * 2;
+        return size < maxSize * 2;
     }
 }

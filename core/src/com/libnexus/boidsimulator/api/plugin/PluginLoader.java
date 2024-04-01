@@ -2,17 +2,17 @@ package com.libnexus.boidsimulator.api.plugin;
 
 import com.badlogic.gdx.files.FileHandle;
 import com.libnexus.boidsimulator.BoidSimulator;
-import com.libnexus.boidsimulator.World;
-import com.libnexus.boidsimulator.entity.boid.BoidAgency;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import java.util.stream.Collectors;
 
 public class PluginLoader {
     private final BoidSimulator simulator;
@@ -53,8 +53,10 @@ public class PluginLoader {
             for (String className : getClassNamesFromJar(file)) {
                 Class<?> clazz = classLoader.loadClass(className);
 
-                if (Plugin.class.isAssignableFrom(clazz))
+                if (Plugin.class.isAssignableFrom(clazz)) {
+                    classLoader.close();
                     return (Plugin) clazz.getDeclaredConstructor(BoidSimulator.class).newInstance(simulator);
+                }
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -70,7 +72,6 @@ public class PluginLoader {
         try {
             jar = new JarFile(jarFile);
         } catch (IOException e) {
-            e.printStackTrace();
             throw new RuntimeException(e);
         }
 

@@ -1,15 +1,14 @@
 package com.libnexus.boidsimulator.entity.effect;
 
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
+public abstract class Effect {
+    public abstract void update();
 
-public interface Effect {
-    void update();
+    public void draw(ShapeRenderer shapeRenderer) {}
+    public void draw(SpriteBatch spriteBatch) {}
 
-    void draw(ShapeRenderer shapeRenderer);
-
-    boolean isAlive();
+    public abstract boolean isAlive();
+    public boolean shouldUpdateWhilePaused() { return false; }
 }

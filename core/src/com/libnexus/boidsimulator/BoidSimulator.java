@@ -18,21 +18,24 @@ import com.libnexus.boidsimulator.entity.boid.Boid;
 import com.libnexus.boidsimulator.entity.boid.BoidAgency;
 import com.libnexus.boidsimulator.entity.boid.DefaultBoidAgency;
 import com.libnexus.boidsimulator.entity.effect.Effect;
+import com.libnexus.boidsimulator.entity.effect.FadingTextEffect;
 import com.libnexus.boidsimulator.entity.obstacle.LineObstacle;
 import com.libnexus.boidsimulator.entity.obstacle.Obstacle;
-import com.libnexus.boidsimulator.math.Vector2f;
+import com.libnexus.boidsimulator.util.Colour;
+import com.libnexus.boidsimulator.util.Vector2f;
 import com.strongjoshua.console.Console;
 import com.strongjoshua.console.GUIConsole;
 import com.strongjoshua.console.LogLevel;
 
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.HashSet;
 
 public class BoidSimulator extends ApplicationAdapter {
     public final HashMap<BoidAgency, Integer> boidAgencyBindings = new HashMap<>();
     public final HashMap<String, BoidAgency> boidAgencyQualifiers = new HashMap<>();
     public Boid selected = null;
     public Console console;
+    public com.libnexus.boidsimulator.console.Console nConsole;
     public PluginManager pluginManager;
     private OrthographicCamera camera;
     private ShapeRenderer shapeRenderer;
@@ -52,8 +55,10 @@ public class BoidSimulator extends ApplicationAdapter {
         camera.setToOrtho(false);
         shapeRenderer.setProjectionMatrix(camera.combined);
         spriteBatch = new SpriteBatch();
+        spriteBatch.setProjectionMatrix(camera.combined);
         bitmapFont = new BitmapFont();
         console = new GUIConsole();
+        nConsole = new com.libnexus.boidsimulator.console.Console();
         pluginManager = new PluginManager(this, pluginDirectory);
         console.setCommandExecutor(new SimulatorCommandExecutor(this));
         console.setDisplayKeyID(Input.Keys.TAB);
@@ -120,13 +125,18 @@ public class BoidSimulator extends ApplicationAdapter {
 
     public void defaultKeyEvents(Vector2f mousePosition) {
         if (!console.isVisible()) {
-            if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE))
-                paused = !paused;
-
-            if (Gdx.input.isKeyJustPressed(Input.Keys.DEL))
-                World.boids().clear();
-
             if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+                String state;
+                if (paused)
+                    state = "un-paused";
+                else
+                    state = "paused";
+                World.effects().add(new FadingTextEffect(state, Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2, 50, 50, true));
+                paused = !paused;
+                nConsole.visible = !nConsole.visible;
+            }
+
+            if (Gdx.input.isKeyJustPressed(Input.Keys.FORWARD_DEL)) {
                 pluginManager.unloadPlugins();
                 Gdx.app.exit();
             }
@@ -138,7 +148,7 @@ public class BoidSimulator extends ApplicationAdapter {
                 if (obstacleSelector == null)
                     obstacleSelector = mousePosition.copy();
                 else {
-                    World.obstacles().add(new LineObstacle(new Color(255, 255, 255, 1), obstacleSelector, mousePosition));
+                    World.obstacles().add(new LineObstacle(Colour.fromRGB(255, 255, 255, 1), obstacleSelector, mousePosition));
                     obstacleSelector = null;
                 }
 
@@ -156,7 +166,10 @@ public class BoidSimulator extends ApplicationAdapter {
     }
 
     public void updateBoidsAndEffects(Vector2f mousePosition) {
-        for (Boid boid : World.boids()) {
+        shapeRenderer.setAutoShapeType(true);
+        shapeRenderer.begin();
+
+        for (Boid boid : new HashSet<>(World.boids())) {
             if (!paused)
                 boid.update();
             else if (Gdx.input.isTouched() && mousePosition.distance(boid.currLocation) < 5)
@@ -164,35 +177,53 @@ public class BoidSimulator extends ApplicationAdapter {
             boid.draw(shapeRenderer);
         }
 
-        for (Effect effect : World.effects()) {
-            if (!paused)
-                effect.update();
-            effect.draw(shapeRenderer);
-        }
-
-        for (Obstacle obstacle : World.obstacles()) {
+        for (Obstacle obstacle : new HashSet<>(World.obstacles())) {
             if (!paused)
                 obstacle.update();
             obstacle.draw(shapeRenderer);
         }
 
-        if (obstacleSelector != null)
-            new LineObstacle(new Color(100, 100, 100, 1), obstacleSelector, mousePosition).draw(shapeRenderer);
+        spriteBatch.begin();
+        for (Effect effect : new HashSet<>(World.effects())) {
+            if (!paused || effect.shouldUpdateWhilePaused())
+                effect.update();
+            effect.draw(shapeRenderer);
+            effect.draw(spriteBatch);
+        }
+        spriteBatch.end();
 
         World.effects().removeIf(effect -> !effect.isAlive());
+
+        if (obstacleSelector != null)
+            new LineObstacle(Colour.fromRGB(100, 100, 100, 1), obstacleSelector, mousePosition).draw(shapeRenderer);
 
         if (!World.boids().contains(selected))
             selected = null;
 
         if (selected != null)
             selected.drawFov(shapeRenderer);
+
+        shapeRenderer.end();
     }
 
     public void drawApplicationDetails() {
+        String details = String.format("Boids: %d, FPS: %s", World.boids().size(), Gdx.graphics.getFramesPerSecond());
         bitmapFont.setColor(0, 0, 255, 1);
-        spriteBatch.setProjectionMatrix(camera.combined);
+        shapeRenderer.begin();
+        nConsole.draw(shapeRenderer);
+        shapeRenderer.end();
         spriteBatch.begin();
-        bitmapFont.draw(spriteBatch, String.format("Boids: %d, FPS: %s", World.boids().size(), Gdx.graphics.getFramesPerSecond()), 20, Gdx.graphics.getHeight() - 20);
+        bitmapFont.draw(spriteBatch, details, 20, Gdx.graphics.getHeight() - 20);
+        nConsole.draw(spriteBatch);
         spriteBatch.end();
     }
+
+    public void drawText(String text, Color colour, int x, int y) {
+        bitmapFont.setColor(colour);
+        spriteBatch.begin();
+        bitmapFont.draw(spriteBatch, text, x, y);
+        spriteBatch.end();
+    }
+
+    public boolean isPaused() { return paused; }
 }

@@ -1,4 +1,4 @@
-package com.libnexus.boidsimulator.math;
+package com.libnexus.boidsimulator.util;
 
 public class Vector2f {
     public float x = 0;
