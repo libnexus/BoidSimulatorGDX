@@ -13,6 +13,18 @@ public class Vector2f {
 
     }
 
+    public static Vector2f max(Vector2f a, Vector2f b) {
+        return a.abs() > b.abs() ? a : b;
+    }
+
+    public static Vector2f min(Vector2f a, Vector2f b) {
+        return a.abs() < b.abs() ? a : b;
+    }
+
+    public static float dot(Vector2f a, Vector2f b) {
+        return a.x * a.y + b.x * b.y;
+    }
+
     public Vector2f add(Vector2f vector) {
         x += vector.x;
         y += vector.y;
@@ -111,17 +123,5 @@ public class Vector2f {
         y /= length;
 
         return this;
-    }
-
-    public static Vector2f max(Vector2f a, Vector2f b) {
-        return a.abs() > b.abs() ? a : b;
-    }
-
-    public static Vector2f min(Vector2f a, Vector2f b) {
-        return a.abs() < b.abs() ? a : b;
-    }
-
-    public static float dot(Vector2f a, Vector2f b) {
-        return a.x * a.y + b.x * b.y;
     }
 }
