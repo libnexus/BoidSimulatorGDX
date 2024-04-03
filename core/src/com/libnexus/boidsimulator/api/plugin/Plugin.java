@@ -1,12 +1,14 @@
 package com.libnexus.boidsimulator.api.plugin;
 
+import com.badlogic.gdx.graphics.Color;
 import com.libnexus.boidsimulator.BoidSimulator;
 import com.libnexus.boidsimulator.World;
+import com.libnexus.boidsimulator.console.Console;
 import com.libnexus.boidsimulator.entity.boid.Boid;
 import com.libnexus.boidsimulator.entity.boid.BoidAgency;
 import com.libnexus.boidsimulator.entity.effect.Effect;
 import com.libnexus.boidsimulator.entity.obstacle.Obstacle;
-import com.strongjoshua.console.LogLevel;
+import com.libnexus.boidsimulator.util.Colour;
 
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -19,21 +21,16 @@ public abstract class Plugin {
     private final List<Effect> effects = new LinkedList<>();
     private final List<Obstacle> obstacles = new LinkedList<>();
     private final List<BoidAgency> agencies = new LinkedList<>();
+    private final Color COLOUR_PLUGIN_NAME = Colour.fromRGB(0, 255, 255, 1);
 
     public Plugin(BoidSimulator simulator) {
         this.simulator = simulator;
     }
 
 
-    public final void consoleLog(String message, LogLevel logLevel) {
-        simulator.console.log(String.format("[%s] %s", name(), message), logLevel);
+    public final Console console() {
+        return simulator.console;
     }
-
-
-    public final void consoleLog(String message) {
-        simulator.console.log(String.format("[%s] %s", name(), message), LogLevel.DEFAULT);
-    }
-
 
     public final List<Boid> getBoids() {
         return boids;

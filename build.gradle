@@ -57,5 +57,6 @@ project(":core") {
     dependencies {
         api "com.badlogicgames.gdx:gdx:$gdxVersion"
         implementation "com.strongjoshua:libgdx-inGameConsole:1.0.0"
+        implementation 'org.apache.commons:commons-lang3:3.9'
     }
 }

@@ -6,14 +6,15 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.PixmapIO;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.ScreenUtils;
-import com.libnexus.boidsimulator.api.plugin.Plugin;
 import com.libnexus.boidsimulator.api.plugin.PluginManager;
-import com.libnexus.boidsimulator.console.SimulatorCommandExecutor;
+import com.libnexus.boidsimulator.console.Console;
 import com.libnexus.boidsimulator.entity.boid.Boid;
 import com.libnexus.boidsimulator.entity.boid.BoidAgency;
 import com.libnexus.boidsimulator.entity.boid.DefaultBoidAgency;
@@ -23,20 +24,21 @@ import com.libnexus.boidsimulator.entity.obstacle.LineObstacle;
 import com.libnexus.boidsimulator.entity.obstacle.Obstacle;
 import com.libnexus.boidsimulator.util.Colour;
 import com.libnexus.boidsimulator.util.Vector2f;
-import com.strongjoshua.console.Console;
-import com.strongjoshua.console.GUIConsole;
-import com.strongjoshua.console.LogLevel;
 
+import java.nio.ByteBuffer;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.zip.Deflater;
 
 public class BoidSimulator extends ApplicationAdapter {
     public final HashMap<BoidAgency, Integer> boidAgencyBindings = new HashMap<>();
     public final HashMap<String, BoidAgency> boidAgencyQualifiers = new HashMap<>();
     public Boid selected = null;
     public Console console;
-    public com.libnexus.boidsimulator.console.Console nConsole;
     public PluginManager pluginManager;
+    public int speed = 1;
     private OrthographicCamera camera;
     private ShapeRenderer shapeRenderer;
     private SpriteBatch spriteBatch;
@@ -57,11 +59,8 @@ public class BoidSimulator extends ApplicationAdapter {
         spriteBatch = new SpriteBatch();
         spriteBatch.setProjectionMatrix(camera.combined);
         bitmapFont = new BitmapFont();
-        console = new GUIConsole();
-        nConsole = new com.libnexus.boidsimulator.console.Console();
+        console = new Console(this);
         pluginManager = new PluginManager(this, pluginDirectory);
-        console.setCommandExecutor(new SimulatorCommandExecutor(this));
-        console.setDisplayKeyID(Input.Keys.TAB);
 
         World.boidAgencies().add(new DefaultBoidAgency());
         initPlugins();
@@ -69,10 +68,6 @@ public class BoidSimulator extends ApplicationAdapter {
 
     public void initPlugins() {
         pluginManager.loadPlugins();
-
-        for (Plugin plugin : pluginManager.plugins()) {
-            console.log(String.format("Successfully loaded plugin '%s' on startup", plugin.name()), LogLevel.SUCCESS);
-        }
     }
 
     @Override
@@ -84,10 +79,26 @@ public class BoidSimulator extends ApplicationAdapter {
         Vector2f mousePosition = new Vector2f(mouse.x, mouse.y);
 
         defaultKeyEvents(mousePosition);
-        updateBoidsAndEffects(mousePosition);
+        for (int i = 0; i < speed; i++) {
+            updateBoidsAndEffects(mousePosition);
+        }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ALT_RIGHT))
+            screenshot();
         drawApplicationDetails();
+    }
 
-        console.draw();
+    public void screenshot() {
+        // https://libgdx.com/wiki/graphics/taking-a-screenshot
+        Pixmap pixmap = Pixmap.createFromFrameBuffer(0, 0, Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight());
+        ByteBuffer pixels = pixmap.getPixels();
+
+        int size = Gdx.graphics.getBackBufferWidth() * Gdx.graphics.getBackBufferHeight() * 4;
+        for (int i = 3; i < size; i += 4) {
+            pixels.put(i, (byte) 255);
+        }
+
+        PixmapIO.writePNG(Gdx.files.external(String.format("BoidSimulatorGDX/screenshots/%s.png", new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(Calendar.getInstance().getTime()))), pixmap, Deflater.DEFAULT_COMPRESSION, true);
+        pixmap.dispose();
     }
 
     @Override
@@ -115,33 +126,28 @@ public class BoidSimulator extends ApplicationAdapter {
                     break;
                 }
             }
-            if (!success) {
-                console.log(String.format("Could not bind agency '%s' to a key", boidAgency.name()), LogLevel.ERROR);
+            if (!success)
                 boidAgencyBindings.put(boidAgency, null);
-            } else
-                console.log(String.format("Bound agency '%s' to key %d", boidAgency.name(), boidAgencyBindings.get(boidAgency)), LogLevel.SUCCESS);
         }
     }
 
     public void defaultKeyEvents(Vector2f mousePosition) {
-        if (!console.isVisible()) {
-            if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-                String state;
-                if (paused)
-                    state = "un-paused";
-                else
-                    state = "paused";
-                World.effects().add(new FadingTextEffect(state, Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2, 50, 50, true));
-                paused = !paused;
-                nConsole.visible = !nConsole.visible;
-            }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+            World.effects().add(new FadingTextEffect(paused ? "un-paused" : "paused", Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2, 50, 50, true));
+            paused = !paused;
+            console.visible = paused;
+        }
 
-            if (Gdx.input.isKeyJustPressed(Input.Keys.FORWARD_DEL)) {
-                pluginManager.unloadPlugins();
-                Gdx.app.exit();
-            }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.TAB) && paused) {
+            console.visible = !console.visible;
+        }
 
-            if (Gdx.input.isKeyJustPressed(Input.Keys.S))
+        if (Gdx.input.isKeyJustPressed(Input.Keys.FORWARD_DEL)) {
+            quit();
+        }
+
+        if (!paused) {
+            if (Gdx.input.isKeyJustPressed(Input.Keys.DEL))
                 selected = null;
 
             if (Gdx.input.isKeyJustPressed(Input.Keys.O))
@@ -172,8 +178,9 @@ public class BoidSimulator extends ApplicationAdapter {
         for (Boid boid : new HashSet<>(World.boids())) {
             if (!paused)
                 boid.update();
-            else if (Gdx.input.isTouched() && mousePosition.distance(boid.currLocation) < 5)
-                selected = boid;
+            else if (Gdx.input.isTouched())
+                if (mousePosition.distance(boid.currLocation) < 5)
+                    selected = boid;
             boid.draw(shapeRenderer);
         }
 
@@ -209,12 +216,14 @@ public class BoidSimulator extends ApplicationAdapter {
     public void drawApplicationDetails() {
         String details = String.format("Boids: %d, FPS: %s", World.boids().size(), Gdx.graphics.getFramesPerSecond());
         bitmapFont.setColor(0, 0, 255, 1);
+
         shapeRenderer.begin();
-        nConsole.draw(shapeRenderer);
+        console.draw(shapeRenderer);
         shapeRenderer.end();
+
         spriteBatch.begin();
         bitmapFont.draw(spriteBatch, details, 20, Gdx.graphics.getHeight() - 20);
-        nConsole.draw(spriteBatch);
+        console.draw(spriteBatch);
         spriteBatch.end();
     }
 
@@ -225,5 +234,12 @@ public class BoidSimulator extends ApplicationAdapter {
         spriteBatch.end();
     }
 
-    public boolean isPaused() { return paused; }
+    public boolean isPaused() {
+        return paused;
+    }
+
+    public void quit() {
+        pluginManager.unloadPlugins();
+        Gdx.app.exit();
+    }
 }

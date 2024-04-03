@@ -8,20 +8,38 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.libnexus.boidsimulator.entity.effect.Effect;
+import com.libnexus.boidsimulator.BoidSimulator;
+import com.libnexus.boidsimulator.console.command.DefaultCommandSet;
+import com.libnexus.boidsimulator.console.command.parse.CommandParser;
+import com.libnexus.boidsimulator.console.command.parse.ConsoleCommand;
 
-public class Console extends Effect {
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Stack;
+import java.util.stream.Collectors;
+
+public class Console {
     public static final String consoleChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_-=+/*";
+    public final List<ConsoleCommand> commands = new LinkedList<>();
+    public final BoidSimulator simulator;
     private final BitmapFont bitmapFont = new BitmapFont();
     private final StringBuilder input = new StringBuilder();
+    private final Stack<ConsoleMessage> messages = new Stack<>();
     public boolean visible = false;
     private int cursor = 0;
 
-    public Console() {
+    public Console(BoidSimulator simulator) {
+        this.simulator = simulator;
+
+        DefaultCommandSet defaultCommandSet = new DefaultCommandSet(this);
+        commands.addAll(CommandParser.consoleCommandsFrom(defaultCommandSet));
+        defaultCommandSet.help();
+        log("");
+
         Gdx.input.setInputProcessor(new InputAdapter() {
             @Override
             public boolean keyDown(int keycode) {
-                System.out.println(Input.Keys.toString(keycode));
                 if (visible) {
                     if (keycode == (Input.Keys.LEFT) && cursor > 0)
                         cursor--;
@@ -38,10 +56,12 @@ public class Console extends Effect {
                         input.deleteCharAt(cursor - 1);
                         if (cursor > 0)
                             cursor--;
-                    } else {
+                    } else if (keycode == Input.Keys.ENTER)
+                        submitCommand();
+                    else {
                         String inputKey = Input.Keys.toString(keycode);
                         if (consoleChars.contains(inputKey)) {
-                            input.insert(cursor, inputKey);
+                            input.insert(cursor, Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT) ? inputKey : inputKey.toLowerCase());
                             cursor++;
                         } else if (keycode == Input.Keys.SPACE) {
                             input.insert(cursor, " ");
@@ -54,50 +74,139 @@ public class Console extends Effect {
         });
     }
 
-    @Override
-    public void draw(ShapeRenderer shapeRenderer) {
-        if (visible) {
-            shapeRenderer.setColor(new Color(10, 10, 10, 0.3f));
-            shapeRenderer.rect(125, 125, Gdx.graphics.getWidth() - 250, 25);
+    public void submitCommand() {
+        String command = input.toString();
+
+        input.delete(0, input.length());
+        cursor = 0;
+
+        List<String> commandDigestible = Arrays.stream(command.split(" ")).collect(Collectors.toList());
+        commandDigestible.removeIf(String::isEmpty);
+
+        if (commandDigestible.isEmpty()) {
+            log("");
+            return;
+        }
+
+        announce("#", Color.WHITE, command);
+
+        String commandName = commandDigestible.remove(0);
+
+        boolean found = false;
+        boolean success = false;
+
+        for (ConsoleCommand consoleCommand : commands) {
+            if (!consoleCommand.command.name().equals(commandName))
+                continue;
+
+            found = true;
+            if (consoleCommand.invokeIfAccepts(commandDigestible)) {
+                success = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            error("no command named ", Color.RED, commandName);
+        } else if (!success) {
+            error("incorrect usage of ", Color.RED, commandName);
         }
     }
 
-    @Override
     public void draw(SpriteBatch spriteBatch) {
         if (visible) {
-            bitmapFont.setColor(new Color(255, 255, 255, 1));
-            bitmapFont.draw(spriteBatch, drawableInput(), 150, 144);
+            bitmapFont.setColor(new Color(1, 1, 1, 1));
+            bitmapFont.draw(spriteBatch, drawableInput(new StringBuilder(input)), 150, 144);
+
+            Stack<ConsoleMessage> showMessages = new Stack<>();
+            showMessages.addAll(messages);
+
+            float x = 150;
+            int y = 0;
+            while (!showMessages.isEmpty()) {
+                if ((y * 16) > 280)
+                    break;
+
+                ConsoleMessage message = showMessages.pop();
+
+                if (message.prefix != null) {
+                    bitmapFont.setColor(message.prefixColour);
+                    bitmapFont.draw(spriteBatch, message.prefix, 150, 180 + (y * 16f));
+                    bitmapFont.setColor(new Color(1, 1, 1, 1));
+                    bitmapFont.draw(spriteBatch, ":", 200, 180 + (y * 16f));
+                    x = 210;
+                }
+
+
+                for (ConsoleString consoleString : message.message) {
+                    final GlyphLayout layout = new GlyphLayout(bitmapFont, consoleString.string);
+
+                    if (layout.width + x > Gdx.graphics.getWidth() - 125)
+                        break;
+
+                    bitmapFont.setColor(consoleString.colour);
+                    bitmapFont.draw(spriteBatch, consoleString.string, x, 180 + (y * 16f));
+
+                    x += layout.width;
+                }
+                x = 150;
+                y++;
+            }
         }
     }
 
-    public String drawableInput() {
-        StringBuilder drawableInput = new StringBuilder(input);
-        while (notFit(drawableInput.toString())) {
-            if (cursor < drawableInput.length() / 2) {
-                while (notFit(drawableInput.toString())) {
-                    drawableInput.deleteCharAt(drawableInput.length() - 1);
-                }
-            } else {
-                while (notFit(drawableInput.toString())) {
-                    drawableInput.deleteCharAt(0);
-                }
+    public void draw(ShapeRenderer shapeRenderer) {
+        if (visible) {
+            shapeRenderer.set(ShapeRenderer.ShapeType.Filled);
+            shapeRenderer.setColor(new Color(0, 0, 0, 0.1f));
+            shapeRenderer.rect(125, 125, Gdx.graphics.getWidth() - 250, 25);
+            shapeRenderer.rect(125, 160, Gdx.graphics.getWidth() - 250, 300);
+            shapeRenderer.set(ShapeRenderer.ShapeType.Line);
+            shapeRenderer.setColor(new Color(1, 1, 1, 0.1f));
+            shapeRenderer.rect(125, 125, Gdx.graphics.getWidth() - 250, 25);
+            shapeRenderer.rect(125, 160, Gdx.graphics.getWidth() - 250, 300);
+        }
+    }
+
+    public String drawableInput(StringBuilder drawableInput) {
+        if (drawableInput.isEmpty())
+            return "";
+
+        if (cursor < drawableInput.length() / 2) {
+            while (notFitInInput(drawableInput.toString())) {
+                drawableInput.deleteCharAt(drawableInput.length() - 1);
+            }
+        } else {
+            while (notFitInInput(drawableInput.toString())) {
+                drawableInput.deleteCharAt(0);
             }
         }
         return drawableInput.toString();
     }
 
-    private boolean notFit(String text) {
+    private boolean notFitInInput(String text) {
+        return notFit(text, Gdx.graphics.getWidth() - 300, 50);
+    }
+
+    private boolean notFit(String text, int w, int h) {
         final GlyphLayout layout = new GlyphLayout(bitmapFont, text);
-        return !(150 + layout.width < Gdx.graphics.getWidth() - 150);
+        return !((layout.width < w) && (layout.height < h));
     }
 
-    @Override
-    public void update() {
-
+    public void addMessage(ConsoleMessage message) {
+        messages.add(message);
     }
 
-    @Override
-    public boolean isAlive() {
-        return true;
+    public void log(Object... message) {
+        messages.add(ConsoleString.ping(message));
+    }
+
+    public void announce(String prefix, Color colour, Object... message) {
+        messages.add(ConsoleString.message(prefix, colour, message));
+    }
+
+    public void error(Object... message) {
+        messages.add(ConsoleString.message("error", Color.RED, message));
     }
 }
+

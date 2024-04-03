@@ -195,4 +195,13 @@ public class Boid {
         shapeRenderer.circle(currLocation.x, currLocation.y, currVisualRange);
         shapeRenderer.circle(centre.x, centre.y, 10);
     }
+
+    public String getStat(String name) {
+        return switch (name) {
+            case "vel", "velocity" -> String.format("(%f, %f)", currVelocity.x, currVelocity.y);
+            case "loc", "location" -> String.format("(%f, %f)", currLocation.x, currLocation.y);
+            case "centre" -> String.format("(%f, %f)", perceivedCentre().x, perceivedCentre().y);
+            default -> null;
+        };
+    }
 }
