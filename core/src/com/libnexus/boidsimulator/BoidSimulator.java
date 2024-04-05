@@ -22,8 +22,9 @@ import com.libnexus.boidsimulator.entity.effect.Effect;
 import com.libnexus.boidsimulator.entity.effect.FadingTextEffect;
 import com.libnexus.boidsimulator.entity.obstacle.LineObstacle;
 import com.libnexus.boidsimulator.entity.obstacle.Obstacle;
-import com.libnexus.boidsimulator.util.Colour;
+import com.libnexus.boidsimulator.util.ColorUtils;
 import com.libnexus.boidsimulator.util.Vector2f;
+import com.libnexus.boidsimulator.world.World;
 
 import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
@@ -62,7 +63,10 @@ public class BoidSimulator extends ApplicationAdapter {
         console = new Console(this);
         pluginManager = new PluginManager(this, pluginDirectory);
 
-        World.boidAgencies().add(new DefaultBoidAgency());
+        World.WORLD_GRID.size = 70;
+        World.WORLD_GRID.initCells();
+
+        World.boidAgencies().add(DefaultBoidAgency.INSTANCE);
         initPlugins();
     }
 
@@ -72,6 +76,9 @@ public class BoidSimulator extends ApplicationAdapter {
 
     @Override
     public void render() {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ALT_RIGHT))
+            screenshot();
+
         ScreenUtils.clear(0, 0, 0, 1);
 
         Vector3 mouse = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
@@ -82,8 +89,6 @@ public class BoidSimulator extends ApplicationAdapter {
         for (int i = 0; i < speed; i++) {
             updateBoidsAndEffects(mousePosition);
         }
-        if (Gdx.input.isKeyJustPressed(Input.Keys.ALT_RIGHT))
-            screenshot();
         drawApplicationDetails();
     }
 
@@ -135,7 +140,7 @@ public class BoidSimulator extends ApplicationAdapter {
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             World.effects().add(new FadingTextEffect(paused ? "un-paused" : "paused", Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2, 50, 50, true));
             paused = !paused;
-            console.visible = paused;
+            console.visible = false;
         }
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.TAB) && paused) {
@@ -154,7 +159,7 @@ public class BoidSimulator extends ApplicationAdapter {
                 if (obstacleSelector == null)
                     obstacleSelector = mousePosition.copy();
                 else {
-                    World.obstacles().add(new LineObstacle(Colour.fromRGB(255, 255, 255, 1), obstacleSelector, mousePosition));
+                    World.obstacles().add(new LineObstacle(ColorUtils.fromRGB(255, 255, 255, 1), obstacleSelector, mousePosition));
                     obstacleSelector = null;
                 }
 
@@ -175,7 +180,7 @@ public class BoidSimulator extends ApplicationAdapter {
         shapeRenderer.setAutoShapeType(true);
         shapeRenderer.begin();
 
-        for (Boid boid : new HashSet<>(World.boids())) {
+        for (Boid boid : World.WORLD_GRID.boids()) {
             if (!paused)
                 boid.update();
             else if (Gdx.input.isTouched())
@@ -183,6 +188,21 @@ public class BoidSimulator extends ApplicationAdapter {
                     selected = boid;
             boid.draw(shapeRenderer);
         }
+
+        World.WORLD_GRID.update();
+
+        /*
+        shapeRenderer.set(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(Color.WHITE);
+        for (int i = 0; i < World.WORLD_GRID.cells.length; i++) {
+            for (int j = 0; j < World.WORLD_GRID.cells[i].length; j++) {
+                float y = (i - 1) * World.WORLD_GRID.size;
+                float x = (j - 1) * World.WORLD_GRID.size;
+                shapeRenderer.line(new Vector2(x, y), new Vector2(x, y + World.WORLD_GRID.size));
+                shapeRenderer.line(new Vector2(x, y), new Vector2(x + World.WORLD_GRID.size, y));
+            }
+        }
+        */
 
         for (Obstacle obstacle : new HashSet<>(World.obstacles())) {
             if (!paused)
@@ -202,7 +222,7 @@ public class BoidSimulator extends ApplicationAdapter {
         World.effects().removeIf(effect -> !effect.isAlive());
 
         if (obstacleSelector != null)
-            new LineObstacle(Colour.fromRGB(100, 100, 100, 1), obstacleSelector, mousePosition).draw(shapeRenderer);
+            new LineObstacle(ColorUtils.fromRGB(100, 100, 100, 1), obstacleSelector, mousePosition).draw(shapeRenderer);
 
         if (!World.boids().contains(selected))
             selected = null;
@@ -214,7 +234,7 @@ public class BoidSimulator extends ApplicationAdapter {
     }
 
     public void drawApplicationDetails() {
-        String details = String.format("Boids: %d, FPS: %s", World.boids().size(), Gdx.graphics.getFramesPerSecond());
+        String details = String.format("Boids: %d, FPS: %s, x: %d, y: %d", World.WORLD_GRID.boids().size(), Gdx.graphics.getFramesPerSecond(), Gdx.input.getX(), Gdx.input.getY());
         bitmapFont.setColor(0, 0, 255, 1);
 
         shapeRenderer.begin();
@@ -222,6 +242,18 @@ public class BoidSimulator extends ApplicationAdapter {
         shapeRenderer.end();
 
         spriteBatch.begin();
+
+        /*
+        for (int i = 0; i < World.WORLD_GRID.cells.length; i++) {
+            for (int j = 0; j < World.WORLD_GRID.cells[i].length; j++) {
+                float y = (i - 1) * World.WORLD_GRID.size;
+                float x = (j - 1) * World.WORLD_GRID.size;
+                bitmapFont.draw(spriteBatch, String.valueOf(World.WORLD_GRID.cells[i][j].boids.size()), x + 35, y + 35);
+
+            }
+        }
+        */
+
         bitmapFont.draw(spriteBatch, details, 20, Gdx.graphics.getHeight() - 20);
         console.draw(spriteBatch);
         spriteBatch.end();

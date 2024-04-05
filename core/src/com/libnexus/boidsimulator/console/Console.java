@@ -10,7 +10,6 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.libnexus.boidsimulator.BoidSimulator;
 import com.libnexus.boidsimulator.console.command.DefaultCommandSet;
-import com.libnexus.boidsimulator.console.command.parse.CommandParser;
 import com.libnexus.boidsimulator.console.command.parse.ConsoleCommand;
 
 import java.util.Arrays;
@@ -20,48 +19,87 @@ import java.util.Stack;
 import java.util.stream.Collectors;
 
 public class Console {
-    public static final String consoleChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_-=+/*";
+    public static final String consoleChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-=;,./";
     public final List<ConsoleCommand> commands = new LinkedList<>();
     public final BoidSimulator simulator;
+    public final Stack<ConsoleMessage> messages = new Stack<>();
     private final BitmapFont bitmapFont = new BitmapFont();
     private final StringBuilder input = new StringBuilder();
-    private final Stack<ConsoleMessage> messages = new Stack<>();
     public boolean visible = false;
     private int cursor = 0;
+    private int messageCursor = 0;
 
     public Console(BoidSimulator simulator) {
         this.simulator = simulator;
 
         DefaultCommandSet defaultCommandSet = new DefaultCommandSet(this);
-        commands.addAll(CommandParser.consoleCommandsFrom(defaultCommandSet));
+        commands.addAll(ConsoleCommand.from(defaultCommandSet));
         defaultCommandSet.help();
         log("");
 
         Gdx.input.setInputProcessor(new InputAdapter() {
             @Override
             public boolean keyDown(int keycode) {
+                String inputKey = Input.Keys.toString(keycode);
+
                 if (visible) {
-                    if (keycode == (Input.Keys.LEFT) && cursor > 0)
-                        cursor--;
-                    else if (keycode == (Input.Keys.RIGHT) && cursor < input.length() - 1)
-                        cursor++;
-                    else if (keycode == (Input.Keys.DOWN))
-                        cursor = 0;
-                    else if (keycode == (Input.Keys.UP))
-                        cursor = input.length() - 1;
-                    else if (keycode == Input.Keys.BACKSPACE && Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT)) {
-                        input.delete(0, cursor);
-                        cursor = 0;
-                    } else if (keycode == Input.Keys.BACKSPACE && cursor > 0) {
-                        input.deleteCharAt(cursor - 1);
-                        if (cursor > 0)
+                    if (Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) {
+                        if (keycode == Input.Keys.LEFT)
+                            cursor = 0;
+                        else if (keycode == Input.Keys.RIGHT)
+                            cursor = input.length();
+                        else if (keycode == Input.Keys.UP)
+                            messageCursor = messages.size();
+                        else if (keycode == Input.Keys.DOWN)
+                            messageCursor = 0;
+                        else {
+                            switch (inputKey) {
+                                case "-":
+                                    input.insert(cursor, "_");
+                                    break;
+                                case "=":
+                                    input.insert(cursor, "+");
+                                    break;
+                                case ";":
+                                    input.insert(cursor, ":");
+                                    break;
+                                case ",":
+                                    input.insert(cursor, "<");
+                                    break;
+                                case ".":
+                                    input.insert(cursor, ">");
+                                    break;
+                                case "/":
+                                    input.insert(cursor, "?");
+                                    break;
+                                default: {
+                                    if (consoleChars.contains(inputKey))
+                                        input.insert(cursor, inputKey);
+                                    else
+                                        return super.keyDown(keycode);
+                                }
+                            }
+                            cursor++;
+                        }
+
+                    } else {
+                        if (keycode == Input.Keys.LEFT && cursor > 0)
                             cursor--;
-                    } else if (keycode == Input.Keys.ENTER)
-                        submitCommand();
-                    else {
-                        String inputKey = Input.Keys.toString(keycode);
-                        if (consoleChars.contains(inputKey)) {
-                            input.insert(cursor, Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT) ? inputKey : inputKey.toLowerCase());
+                        else if (keycode == (Input.Keys.RIGHT) && cursor < input.length())
+                            cursor++;
+                        else if (keycode == Input.Keys.UP && messageCursor < messages.size())
+                            messageCursor++;
+                        else if (keycode == Input.Keys.DOWN && messageCursor > 0)
+                            messageCursor--;
+                        else if (keycode == Input.Keys.ENTER)
+                            submitCommand();
+                        else if (keycode == Input.Keys.BACKSPACE && cursor > 0)
+                            input.deleteCharAt(--cursor);
+                        else if (keycode == Input.Keys.BACKSPACE && Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT)) {
+                            input.delete(0, cursor);
+                            cursor = 0;
+                        } else if (consoleChars.contains(inputKey)) {
+                            input.insert(cursor, inputKey.toLowerCase());
                             cursor++;
                         } else if (keycode == Input.Keys.SPACE) {
                             input.insert(cursor, " ");
@@ -96,7 +134,7 @@ public class Console {
         boolean success = false;
 
         for (ConsoleCommand consoleCommand : commands) {
-            if (!consoleCommand.command.name().equals(commandName))
+            if (!consoleCommand.commandAttribute.name().equals(commandName))
                 continue;
 
             found = true;
@@ -120,6 +158,10 @@ public class Console {
 
             Stack<ConsoleMessage> showMessages = new Stack<>();
             showMessages.addAll(messages);
+
+            for (int i = 0; i < messageCursor; i++) {
+                showMessages.pop();
+            }
 
             float x = 150;
             int y = 0;

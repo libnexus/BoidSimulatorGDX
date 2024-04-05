@@ -2,7 +2,7 @@ package com.libnexus.boidsimulator.util;
 
 import com.badlogic.gdx.graphics.Color;
 
-public class Colour extends Color {
+public class ColorUtils extends Color {
     public static Color fromRGB(int r, int g, int b) {
         return new Color((float) r / 255, (float) g / 255, (float) b / 255, 1);
     }

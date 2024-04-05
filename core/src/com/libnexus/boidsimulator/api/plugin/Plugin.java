@@ -2,13 +2,13 @@ package com.libnexus.boidsimulator.api.plugin;
 
 import com.badlogic.gdx.graphics.Color;
 import com.libnexus.boidsimulator.BoidSimulator;
-import com.libnexus.boidsimulator.World;
 import com.libnexus.boidsimulator.console.Console;
 import com.libnexus.boidsimulator.entity.boid.Boid;
 import com.libnexus.boidsimulator.entity.boid.BoidAgency;
 import com.libnexus.boidsimulator.entity.effect.Effect;
 import com.libnexus.boidsimulator.entity.obstacle.Obstacle;
-import com.libnexus.boidsimulator.util.Colour;
+import com.libnexus.boidsimulator.util.ColorUtils;
+import com.libnexus.boidsimulator.world.World;
 
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -21,7 +21,7 @@ public abstract class Plugin {
     private final List<Effect> effects = new LinkedList<>();
     private final List<Obstacle> obstacles = new LinkedList<>();
     private final List<BoidAgency> agencies = new LinkedList<>();
-    private final Color COLOUR_PLUGIN_NAME = Colour.fromRGB(0, 255, 255, 1);
+    private final Color COLOUR_PLUGIN_NAME = ColorUtils.fromRGB(0, 255, 255, 1);
 
     public Plugin(BoidSimulator simulator) {
         this.simulator = simulator;

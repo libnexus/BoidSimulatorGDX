@@ -12,5 +12,7 @@ public @interface Command {
 
     String description();
 
-    boolean requireSimulatorInstance() default false;
+    boolean hidden() default false;
+
+    boolean varargs() default false;
 }

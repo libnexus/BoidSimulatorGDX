@@ -2,9 +2,9 @@ package com.libnexus.boidsimulator.entity.effect;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.libnexus.boidsimulator.World;
 import com.libnexus.boidsimulator.entity.boid.Boid;
 import com.libnexus.boidsimulator.util.Vector2f;
+import com.libnexus.boidsimulator.world.World;
 
 public class ExplosionEffect extends Effect {
     public final Vector2f location;

@@ -1,10 +1,8 @@
 package com.libnexus.boidsimulator.entity.boid;
 
-import com.libnexus.boidsimulator.World;
 import com.libnexus.boidsimulator.util.Vector2f;
+import com.libnexus.boidsimulator.world.World;
 
-import java.util.List;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public abstract class BoidAgency {
@@ -24,7 +22,7 @@ public abstract class BoidAgency {
      * @param boid the boid to add to the world
      */
     public void spawn(Boid boid) {
-        World.boids().add(boid);
+        World.WORLD_GRID.place(boid);
     }
 
     /**
@@ -59,45 +57,5 @@ public abstract class BoidAgency {
      * Should safely kill a boid
      */
     public abstract void kill(Boid boid);
-
-    /**
-     * Should remove all boids from the given list of boids based on the value given and attribute name
-     *
-     * @param name  the name of the attribute to compare e.g. <code>core:curr_vel_abs:less_than</code>
-     * @param value the value of the attribute to use e.g. <code>15</code>
-     * @param boids the list of boids to remove all the given filter from
-     */
-    public void filterIntegerAttribute(String name, Integer value, List<Boid> boids) {
-        Matcher matcher = DEFAULT_STRING_ATTRIBUTE_MATCHER.matcher(name);
-
-        if (matcher.matches()) {
-            switch (matcher.group(1)) {
-                case "curr_vel_abs":
-                    switch (matcher.group(2)) {
-                        case "less_than":
-                            boids.removeIf(boid -> boid.currVelocity.abs() < value);
-                            break;
-                        case "more_than":
-                            boids.removeIf(boid -> boid.currVelocity.abs() > value);
-                            break;
-                        case "equals":
-                            boids.removeIf(boid -> boid.currVelocity.abs() == value);
-                            break;
-                    }
-                case "curr_loc_abs":
-                    switch (matcher.group(2)) {
-                        case "less_than":
-                            boids.removeIf(boid -> boid.currLocation.abs() < value);
-                            break;
-                        case "more_than":
-                            boids.removeIf(boid -> boid.currLocation.abs() > value);
-                            break;
-                        case "equals":
-                            boids.removeIf(boid -> boid.currLocation.abs() == value);
-                            break;
-                    }
-            }
-        }
-    }
 }
 

@@ -1,4 +1,4 @@
-package com.libnexus.boidsimulator;
+package com.libnexus.boidsimulator.world;
 
 import com.badlogic.gdx.Gdx;
 import com.libnexus.boidsimulator.entity.boid.Boid;
@@ -8,13 +8,12 @@ import com.libnexus.boidsimulator.entity.obstacle.Obstacle;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Random;
 
 public class World {
     public static final int WIDTH = Gdx.graphics.getWidth();
     public static final int HEIGHT = Gdx.graphics.getHeight();
+    public static final WorldGrid WORLD_GRID = new WorldGrid(WIDTH, HEIGHT);
     public static final int MARGIN = 100;
-    public static final Random RANDOM = new Random();
     private static final List<Boid> boids = new LinkedList<>();
     private static final List<Effect> effects = new LinkedList<>();
     private static final List<Obstacle> obstacles = new LinkedList<>();

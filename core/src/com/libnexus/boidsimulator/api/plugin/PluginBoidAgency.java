@@ -1,8 +1,8 @@
 package com.libnexus.boidsimulator.api.plugin;
 
-import com.libnexus.boidsimulator.World;
 import com.libnexus.boidsimulator.entity.boid.Boid;
 import com.libnexus.boidsimulator.entity.boid.BoidAgency;
+import com.libnexus.boidsimulator.world.World;
 
 public abstract class PluginBoidAgency extends BoidAgency {
     protected Plugin plugin;

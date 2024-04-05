@@ -4,20 +4,20 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.libnexus.boidsimulator.util.Colour;
+import com.libnexus.boidsimulator.util.ColorUtils;
 
 public class FadingTextEffect extends Effect {
     protected static final BitmapFont bitmapFont = new BitmapFont();
     private final int fadeIn, fadeOut;
     private final String text;
     private final int x, y;
+    private final Color colour;
     private int currFadeIn = 0;
     private int currFadeOut = 0;
-    private Color colour;
 
     public FadingTextEffect(String text, int r, int g, int b, int x, int y, int fadeIn, int fadeOut, boolean centre) {
         this.text = text;
-        colour = Colour.fromRGB(r, g, b, 0);
+        colour = ColorUtils.fromRGB(r, g, b, 0);
         if (centre) {
             final GlyphLayout layout = new GlyphLayout(bitmapFont, text);
             this.x = (int) (x - layout.width / 2);

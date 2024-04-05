@@ -1,20 +1,27 @@
 package com.libnexus.boidsimulator.console.command;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
-import com.libnexus.boidsimulator.World;
 import com.libnexus.boidsimulator.console.Console;
 import com.libnexus.boidsimulator.console.ConsoleMessage;
 import com.libnexus.boidsimulator.console.ConsoleString;
 import com.libnexus.boidsimulator.console.command.annotations.Argument;
 import com.libnexus.boidsimulator.console.command.annotations.Command;
+import com.libnexus.boidsimulator.console.command.parse.CommandArgumentParser;
 import com.libnexus.boidsimulator.console.command.parse.ConsoleCommand;
 import com.libnexus.boidsimulator.entity.boid.Boid;
 import com.libnexus.boidsimulator.entity.boid.BoidAgency;
+import com.libnexus.boidsimulator.entity.boid.DefaultBoidAgency;
+import com.libnexus.boidsimulator.util.ColorUtils;
+import com.libnexus.boidsimulator.util.Vector2f;
+import com.libnexus.boidsimulator.world.World;
 
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import static com.badlogic.gdx.math.MathUtils.random;
 
 public class DefaultCommandSet {
     private final Console console;
@@ -26,7 +33,7 @@ public class DefaultCommandSet {
     public HashMap<String, List<ConsoleCommand>> allCommands() {
         HashMap<String, List<ConsoleCommand>> commands = new HashMap<>();
         for (ConsoleCommand command : console.commands) {
-            String name = command.command.name();
+            String name = command.commandAttribute.name();
             List<ConsoleCommand> subcommands;
             if ((subcommands = commands.get(name)) != null)
                 subcommands.add(command);
@@ -49,7 +56,7 @@ public class DefaultCommandSet {
                 console.log("* ", Color.CYAN, commandName);
             else {
                 ConsoleCommand command = commands.get(commandName).get(0);
-                console.log("- ", Color.CYAN, command.command.name(), "    ", Color.WHITE, command.command.description());
+                console.log("- ", Color.CYAN, command.commandAttribute.name(), "    ", Color.WHITE, command.commandAttribute.description());
             }
         }
     }
@@ -68,10 +75,10 @@ public class DefaultCommandSet {
         List<ConsoleCommand> subcommands = commands.get(commandName);
 
         for (ConsoleCommand command : subcommands) {
-            console.log("- ", Color.WHITE, command.command.description());
+            console.log("- ", Color.WHITE, command.commandAttribute.description());
             LinkedList<ConsoleString> arguments = new LinkedList<>();
             arguments.add(new ConsoleString("    ~ "));
-            arguments.add(new ConsoleString(command.command.name(), Color.CYAN));
+            arguments.add(new ConsoleString(command.commandAttribute.name(), Color.CYAN));
             for (Argument argument : command.arguments) {
                 arguments.add(new ConsoleString(" ["));
                 arguments.add(new ConsoleString(argument.name(), Color.CYAN));
@@ -84,14 +91,11 @@ public class DefaultCommandSet {
         }
     }
 
-    @Command(name = "echo", description = "repeats what is given as the second argument")
-    public void echo(@Argument(name = "what", description = "the thing to be repeated") String what) {
-        console.log(what);
-    }
-
-    @Command(name = "ping", description = "adds 1 to the given amount then displays the answer")
-    public void ping(@Argument(name = "amount", description = "the number to add 1 to", parser = "int") Integer amount) {
-        console.log(String.valueOf(amount + 1));
+    @Command(name = "killall", description = "kills all boids")
+    public void killAll() {
+        for (BoidAgency boidAgency : World.boidAgencies())
+            boidAgency.killAll();
+        console.log("killed ", Color.GREEN, "TODOFIXMATRIX", Color.WHITE, " boids");
     }
 
     @Command(name = "killall", description = "kills all boids of a given agency qualifier")
@@ -100,10 +104,8 @@ public class DefaultCommandSet {
         if (boidAgency == null) {
             console.error(Color.RED, qualifier, Color.WHITE, " is not a boid qualifier");
         } else {
-            int count = World.boids().size();
             boidAgency.killAll();
-            count -= World.boids().size();
-            console.log("killed ", Color.GREEN, String.valueOf(count), Color.WHITE, " boids");
+            console.log("killed ", Color.GREEN, "TODOFIXMATRIX", Color.WHITE, " boids");
         }
     }
 
@@ -126,7 +128,7 @@ public class DefaultCommandSet {
             console.log("- ", Color.CYAN, agencyCount.getKey().name(), Color.WHITE, " : ", String.valueOf(agencyCount.getValue()));
         }
 
-        console.log("Total ", Color.GREEN, String.valueOf(World.boids().size()), Color.WHITE, " boids");
+        console.log("Total ", Color.GREEN, "TODOFIXMATRIX", Color.WHITE, " boids");
     }
 
     @Command(name = "inspect", description = "inspects the selected boid for a given stat name in 3")
@@ -143,6 +145,11 @@ public class DefaultCommandSet {
             console.log(stat);
     }
 
+    @Command(name = "speed", description = "shows the current speed that the simulator is running at")
+    public void speed() {
+        console.log("Current speed is ", Color.GREEN, String.valueOf(console.simulator.speed));
+    }
+
     @Command(name = "speed", description = "sets how many times the world is updated each frame")
     public void speed(@Argument(name = "speed", description = "the new amount of times to update the world each frame", parser = "int") Integer speed) {
         if (speed < 0)
@@ -151,5 +158,100 @@ public class DefaultCommandSet {
             console.simulator.speed = speed;
             console.log("New speed is ", Color.GREEN, String.valueOf(speed));
         }
+    }
+
+    @Command(name = "clear", description = "clears the console log")
+    public void clear() {
+        console.messages.clear();
+    }
+
+    @Command(name = "spawn", description = "displays all the attributes for the spawn commands")
+    public void spawn() {
+        console.log(Color.CYAN, "Spawn attributes");
+        console.log("- ", Color.CYAN, "colour ", Color.WHITE, ": ",
+                Color.CYAN, "x", Color.WHITE, ", ",
+                Color.CYAN, "y", Color.WHITE, ", ",
+                Color.CYAN, "z");
+    }
+
+    @Command(name = "spawn", description = "displays all the attributes for the spawn commands", varargs = true)
+    public void spawn(List<String> args) {
+        List<String> parsingArgs = new LinkedList<>(args);
+
+        BoidAgency agency = DefaultBoidAgency.INSTANCE;
+        Vector2f location = new Vector2f(random.nextInt(Gdx.graphics.getWidth()), random.nextInt(Gdx.graphics.getHeight() - 400) + 400);
+        Integer visualRange = null;
+        Integer speedLimitUpper = null;
+        Integer speedLimitLower = null;
+        Integer speed = null;
+        Integer shynessThreshold = null;
+        Float shynessFactor = null;
+        Float centringFactor = null;
+        Float matchingFactor = null;
+        Color colour = null;
+        int amount = 1;
+
+        while (!parsingArgs.isEmpty()) {
+            String attribute = parsingArgs.remove(0);
+
+            switch (attribute) {
+                case "location": {
+                    List<Object> locationValues = parseArguments(parsingArgs, CommandArgumentParser.INTEGER_PARSER, CommandArgumentParser.INTEGER_PARSER);
+                    if (locationValues == null)
+                        return;
+
+                    parsingArgs.remove(0);
+                    parsingArgs.remove(0);
+                    parsingArgs.remove(0);
+
+                    location = new Vector2f((Float) locationValues.get(0), (Float) locationValues.get(1));
+
+                    break;
+                }
+
+                case "colour": {
+                    System.out.println(parsingArgs.size());
+                    List<Object> colourValues = parseArguments(parsingArgs, CommandArgumentParser.INTEGER_PARSER, CommandArgumentParser.INTEGER_PARSER, CommandArgumentParser.INTEGER_PARSER);
+                    if (colourValues == null)
+                        return;
+
+                    parsingArgs.remove(0);
+                    parsingArgs.remove(0);
+                    parsingArgs.remove(0);
+
+                    colour = ColorUtils.fromRGB((int) colourValues.get(0), (int) colourValues.get(1), (int) colourValues.get(2));
+
+                    break;
+                }
+
+                default: {
+                    console.error("bad spawning argument ", Color.RED, attribute);
+                    return;
+                }
+            }
+        }
+
+        for (int i = 0; i < amount; i++) {
+            DefaultBoidAgency.INSTANCE.spawn(new Boid(agency, location, visualRange, speedLimitUpper, speedLimitLower, speed, shynessThreshold, shynessFactor, centringFactor, matchingFactor, colour));
+        }
+    }
+
+    public List<Object> parseArguments(List<String> args, CommandArgumentParser<?>... parsers) {
+        if (args.size() != parsers.length) {
+            console.error("expected at least ", Color.RED, String.valueOf(parsers.length - args.size()), Color.WHITE, " more argument/s");
+            return null;
+        }
+
+        LinkedList<Object> parsedArguments = new LinkedList<>();
+
+        for (int i = 0; i < parsers.length; i++) {
+            if (!parsers[i].accepts(args.get(i))) {
+                console.error("argument ", Color.RED, args.get(i), Color.WHITE, " should be a/n ", Color.RED, parsers[i].name);
+                return null;
+            }
+            parsedArguments.add(parsers[i].parse(args.get(i)));
+        }
+
+        return parsedArguments;
     }
 }
