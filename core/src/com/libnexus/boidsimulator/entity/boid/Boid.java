@@ -88,6 +88,8 @@ public class Boid {
         Vector2f centre = new Vector2f(0, 0);
         AtomicInteger neighbours = new AtomicInteger();
         worldCell.forEachBoidNeighbour(boid -> {
+            if (neighbours.get() > 50) return;
+
             if (currLocation.distance(boid.currLocation) < currVisualRange) {
                 neighbours.getAndIncrement();
                 centre.add(boid.currLocation);
@@ -104,6 +106,8 @@ public class Boid {
         AtomicInteger neighbours = new AtomicInteger();
 
         worldCell.forEachBoidNeighbour(boid -> {
+            if (neighbours.get() > 50) return;
+
             if (currLocation.distance(boid.currLocation) < currVisualRange) {
                 neighbours.getAndIncrement();
                 average.add(boid.currVelocity);
@@ -132,8 +136,11 @@ public class Boid {
     public void avoidOthers() {
         Vector2f move = new Vector2f(0, 0);
 
+        AtomicInteger neighbours = new AtomicInteger();
+
         worldCell.forEachBoidNeighbour(boid -> {
             if (boid == this) return;
+            if (neighbours.get() > 50) return;
 
             if (currLocation.distance(boid.currLocation) < currShynessThreshold) {
                 move.add(currLocation.subtracted(boid.currLocation));
@@ -151,6 +158,9 @@ public class Boid {
         if (currLocation.y < World.MARGIN) currVelocity.add(0, 1f);
         if (currLocation.y > World.HEIGHT - World.MARGIN) currVelocity.add(0, -1f);
 
+        /*
+        TODO deprecated method of checking for obstacles before the implementation of spatial partitioning, must be updated
+
         for (Obstacle obstacle : World.obstacles()) {
 
             Vector2f[] vertices = obstacle.vertices();
@@ -164,6 +174,7 @@ public class Boid {
                 }
             }
         }
+         */
     }
 
     public void update() {

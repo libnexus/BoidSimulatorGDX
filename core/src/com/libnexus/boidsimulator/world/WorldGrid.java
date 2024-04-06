@@ -82,6 +82,11 @@ public class WorldGrid {
         boids.add(boid);
     }
 
+    public void remove(Boid boid) {
+        boid.worldCell.boids.remove(boid);
+        boid.worldCell = null;
+    }
+
     public Set<Boid> boids() {
         return Collections.unmodifiableSet(boids);
     }

@@ -26,7 +26,6 @@ public class PluginManager {
     public void unloadPlugin(Plugin plugin) {
         plugin.pruneMyBoids();
         plugin.pruneMyEffects();
-        plugin.pruneMyObstacles();
         plugin.allAgenciesKillAll();
         plugin.pruneMyAgencies();
         plugin.dispose();

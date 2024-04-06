@@ -12,11 +12,10 @@ import java.util.List;
 public class World {
     public static final int WIDTH = Gdx.graphics.getWidth();
     public static final int HEIGHT = Gdx.graphics.getHeight();
-    public static final WorldGrid WORLD_GRID = new WorldGrid(WIDTH, HEIGHT);
+    public static final WorldGrid GRID = new WorldGrid(WIDTH, HEIGHT);
     public static final int MARGIN = 100;
     private static final List<Boid> boids = new LinkedList<>();
     private static final List<Effect> effects = new LinkedList<>();
-    private static final List<Obstacle> obstacles = new LinkedList<>();
     private static final List<BoidAgency> agencies = new LinkedList<>();
 
     public static List<Boid> boids() {
@@ -25,10 +24,6 @@ public class World {
 
     public static List<Effect> effects() {
         return effects;
-    }
-
-    public static List<Obstacle> obstacles() {
-        return obstacles;
     }
 
     public static List<BoidAgency> boidAgencies() {

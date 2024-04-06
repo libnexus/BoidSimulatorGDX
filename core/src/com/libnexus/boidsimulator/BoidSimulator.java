@@ -63,8 +63,8 @@ public class BoidSimulator extends ApplicationAdapter {
         console = new Console(this);
         pluginManager = new PluginManager(this, pluginDirectory);
 
-        World.WORLD_GRID.size = 70;
-        World.WORLD_GRID.initCells();
+        World.GRID.size = 70;
+        World.GRID.initCells();
 
         World.boidAgencies().add(DefaultBoidAgency.INSTANCE);
         initPlugins();
@@ -155,14 +155,6 @@ public class BoidSimulator extends ApplicationAdapter {
             if (Gdx.input.isKeyJustPressed(Input.Keys.DEL))
                 selected = null;
 
-            if (Gdx.input.isKeyJustPressed(Input.Keys.O))
-                if (obstacleSelector == null)
-                    obstacleSelector = mousePosition.copy();
-                else {
-                    World.obstacles().add(new LineObstacle(ColorUtils.fromRGB(255, 255, 255, 1), obstacleSelector, mousePosition));
-                    obstacleSelector = null;
-                }
-
             for (BoidAgency boidAgency : World.boidAgencies()) {
                 Integer key = boidAgencyBindings.get(boidAgency);
                 if (key == null)
@@ -180,7 +172,10 @@ public class BoidSimulator extends ApplicationAdapter {
         shapeRenderer.setAutoShapeType(true);
         shapeRenderer.begin();
 
-        for (Boid boid : World.WORLD_GRID.boids()) {
+        if (!paused)
+            World.GRID.update();
+
+        for (Boid boid : World.GRID.boids()) {
             if (!paused)
                 boid.update();
             else if (Gdx.input.isTouched())
@@ -188,8 +183,6 @@ public class BoidSimulator extends ApplicationAdapter {
                     selected = boid;
             boid.draw(shapeRenderer);
         }
-
-        World.WORLD_GRID.update();
 
         /*
         shapeRenderer.set(ShapeRenderer.ShapeType.Line);
@@ -203,12 +196,6 @@ public class BoidSimulator extends ApplicationAdapter {
             }
         }
         */
-
-        for (Obstacle obstacle : new HashSet<>(World.obstacles())) {
-            if (!paused)
-                obstacle.update();
-            obstacle.draw(shapeRenderer);
-        }
 
         spriteBatch.begin();
         for (Effect effect : new HashSet<>(World.effects())) {
@@ -234,8 +221,8 @@ public class BoidSimulator extends ApplicationAdapter {
     }
 
     public void drawApplicationDetails() {
-        String details = String.format("Boids: %d, FPS: %s, x: %d, y: %d", World.WORLD_GRID.boids().size(), Gdx.graphics.getFramesPerSecond(), Gdx.input.getX(), Gdx.input.getY());
-        bitmapFont.setColor(0, 0, 255, 1);
+        String details = String.format("Boids: %d, FPS: %s, x: %d, y: %d", World.GRID.boids().size(), Gdx.graphics.getFramesPerSecond(), Gdx.input.getX(), Gdx.input.getY());
+        bitmapFont.setColor(0, 255, 255, 1);
 
         shapeRenderer.begin();
         console.draw(shapeRenderer);

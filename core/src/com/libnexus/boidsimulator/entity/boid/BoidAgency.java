@@ -22,7 +22,7 @@ public abstract class BoidAgency {
      * @param boid the boid to add to the world
      */
     public void spawn(Boid boid) {
-        World.WORLD_GRID.place(boid);
+        World.GRID.place(boid);
     }
 
     /**
