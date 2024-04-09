@@ -16,10 +16,7 @@ import com.libnexus.boidsimulator.util.ColorUtils;
 import com.libnexus.boidsimulator.util.Vector2f;
 import com.libnexus.boidsimulator.world.World;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.badlogic.gdx.math.MathUtils.random;
 
@@ -93,9 +90,10 @@ public class DefaultCommandSet {
 
     @Command(name = "killall", description = "kills all boids")
     public void killAll() {
-        for (BoidAgency boidAgency : World.boidAgencies())
-            boidAgency.killAll();
-        console.log("killed ", Color.GREEN, "TODOFIXMATRIX", Color.WHITE, " boids");
+        int count = World.GRID.boids().size();
+        for (BoidAgency agency : World.boidAgencies())
+            agency.killAll();
+        console.log("killed ", Color.GREEN, String.valueOf(count - World.GRID.boids().size()), Color.WHITE, " boids");
     }
 
     @Command(name = "killall", description = "kills all boids of a given agency qualifier")
@@ -104,8 +102,9 @@ public class DefaultCommandSet {
         if (boidAgency == null) {
             console.error(Color.RED, qualifier, Color.WHITE, " is not a boid qualifier");
         } else {
+            int count = World.GRID.boids().size();
             boidAgency.killAll();
-            console.log("killed ", Color.GREEN, "TODOFIXMATRIX", Color.WHITE, " boids");
+            console.log("killed ", Color.GREEN, String.valueOf(count - World.GRID.boids().size()), Color.WHITE, " boids");
         }
     }
 
@@ -118,7 +117,7 @@ public class DefaultCommandSet {
     public void boids() {
         HashMap<BoidAgency, Integer> agencyCounts = new HashMap<>();
 
-        for (Boid boid : World.boids()) {
+        for (Boid boid : World.GRID.boids()) {
             agencyCounts.merge(boid.agency, 1, Integer::sum);
         }
 
@@ -128,7 +127,7 @@ public class DefaultCommandSet {
             console.log("- ", Color.CYAN, agencyCount.getKey().name(), Color.WHITE, " : ", String.valueOf(agencyCount.getValue()));
         }
 
-        console.log("Total ", Color.GREEN, "TODOFIXMATRIX", Color.WHITE, " boids");
+        console.log("Total ", Color.GREEN, String.valueOf(World.GRID.boids().size()), Color.WHITE, " boids");
     }
 
     @Command(name = "inspect", description = "inspects the selected boid for a given stat name in 3")

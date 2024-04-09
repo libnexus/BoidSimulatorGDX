@@ -88,7 +88,7 @@ public class Boid {
         Vector2f centre = new Vector2f(0, 0);
         AtomicInteger neighbours = new AtomicInteger();
         worldCell.forEachBoidNeighbour(boid -> {
-            if (neighbours.get() > 50) return;
+            if (neighbours.get() > 150) return;
 
             if (currLocation.distance(boid.currLocation) < currVisualRange) {
                 neighbours.getAndIncrement();
@@ -106,7 +106,7 @@ public class Boid {
         AtomicInteger neighbours = new AtomicInteger();
 
         worldCell.forEachBoidNeighbour(boid -> {
-            if (neighbours.get() > 50) return;
+            if (neighbours.get() > 150) return;
 
             if (currLocation.distance(boid.currLocation) < currVisualRange) {
                 neighbours.getAndIncrement();
@@ -140,7 +140,7 @@ public class Boid {
 
         worldCell.forEachBoidNeighbour(boid -> {
             if (boid == this) return;
-            if (neighbours.get() > 50) return;
+            if (neighbours.get() > 15033) return;
 
             if (currLocation.distance(boid.currLocation) < currShynessThreshold) {
                 move.add(currLocation.subtracted(boid.currLocation));

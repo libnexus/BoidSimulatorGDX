@@ -31,46 +31,12 @@ public class WorldCell {
             i++;
             Boid boid = boidIterator.next();
 
-            if (i > 20)
-                boid.currVelocity.add(boid.currVelocity.opposite().multiplyBy(2));
-
-            if (boid.currLocation.x > x + worldGrid.cellSize()) {
+            if (worldGrid.migrated(boid)) {
                 boidIterator.remove();
-
-                if (boid.currLocation.y > y + worldGrid.cellSize() && southEast != null) {
-                    southEast.pickup.add(boid);
-                    boid.worldCell = southEast;
-                } else if (boid.currLocation.y < y && northEast != null) {
-                    northEast.pickup.add(boid);
-                    boid.worldCell = northEast;
-                } else if (east != null) {
-                    east.pickup.add(boid);
-                    boid.worldCell = east;
-                }
-            } else if (boid.currLocation.x < x) {
-                boidIterator.remove();
-
-                if (boid.currLocation.y > y + worldGrid.cellSize() && southWest != null) {
-                    southWest.pickup.add(boid);
-                    boid.worldCell = southWest;
-                } else if (boid.currLocation.y < y && northWest != null) {
-                    northWest.pickup.add(boid);
-                    boid.worldCell = northWest;
-                } else if (west != null) {
-                    west.pickup.add(boid);
-                    boid.worldCell = west;
-                }
-            } else if (boid.currLocation.y > y + worldGrid.cellSize() && south != null) {
-                boidIterator.remove();
-                south.pickup.add(boid);
-                boid.worldCell = south;
-            } else if (boid.currLocation.y < y && north != null) {
-                boidIterator.remove();
-                north.pickup.add(boid);
-                boid.worldCell = north;
+                worldGrid.place(boid);
             }
         }
-        
+
         boids.addAll(pickup);
         pickup.clear();
     }
