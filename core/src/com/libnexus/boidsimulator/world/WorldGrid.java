@@ -85,6 +85,7 @@ public class WorldGrid {
     public void remove(Boid boid) {
         boid.worldCell.boids.remove(boid);
         boid.worldCell = null;
+        boids.remove(boid);
     }
 
     public Set<Boid> boids() {
