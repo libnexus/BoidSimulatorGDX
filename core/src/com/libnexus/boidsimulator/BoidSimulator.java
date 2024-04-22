@@ -184,8 +184,18 @@ public class BoidSimulator extends ApplicationAdapter {
             boid.draw(shapeRenderer);
         }
 
-        if (!paused)
-            World.GRID.update();
+        /*
+        shapeRenderer.set(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(Color.WHITE);
+        for (int i = 0; i < World.WORLD_GRID.cells.length; i++) {
+            for (int j = 0; j < World.WORLD_GRID.cells[i].length; j++) {
+                float y = (i - 1) * World.WORLD_GRID.size;
+                float x = (j - 1) * World.WORLD_GRID.size;
+                shapeRenderer.line(new Vector2(x, y), new Vector2(x, y + World.WORLD_GRID.size));
+                shapeRenderer.line(new Vector2(x, y), new Vector2(x + World.WORLD_GRID.size, y));
+            }
+        }
+        */
 
         spriteBatch.begin();
         for (Effect effect : new HashSet<>(World.effects())) {
@@ -201,7 +211,7 @@ public class BoidSimulator extends ApplicationAdapter {
         if (obstacleSelector != null)
             new LineObstacle(ColorUtils.fromRGB(100, 100, 100, 1), obstacleSelector, mousePosition).draw(shapeRenderer);
 
-        if (!World.GRID.boids().contains(selected))
+        if (!World.boids().contains(selected))
             selected = null;
 
         if (selected != null)
@@ -214,12 +224,23 @@ public class BoidSimulator extends ApplicationAdapter {
         String details = String.format("Boids: %d, FPS: %s, x: %d, y: %d", World.GRID.boids().size(), Gdx.graphics.getFramesPerSecond(), Gdx.input.getX(), Gdx.input.getY());
         bitmapFont.setColor(0, 255, 255, 1);
 
-        shapeRenderer.setAutoShapeType(true);
         shapeRenderer.begin();
         console.draw(shapeRenderer);
         shapeRenderer.end();
 
         spriteBatch.begin();
+
+        /*
+        for (int i = 0; i < World.WORLD_GRID.cells.length; i++) {
+            for (int j = 0; j < World.WORLD_GRID.cells[i].length; j++) {
+                float y = (i - 1) * World.WORLD_GRID.size;
+                float x = (j - 1) * World.WORLD_GRID.size;
+                bitmapFont.draw(spriteBatch, String.valueOf(World.WORLD_GRID.cells[i][j].boids.size()), x + 35, y + 35);
+
+            }
+        }
+        */
+
         bitmapFont.draw(spriteBatch, details, 20, Gdx.graphics.getHeight() - 20);
         console.draw(spriteBatch);
         spriteBatch.end();

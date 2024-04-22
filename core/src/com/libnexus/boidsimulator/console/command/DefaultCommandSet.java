@@ -2,7 +2,6 @@ package com.libnexus.boidsimulator.console.command;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
-import com.libnexus.boidsimulator.api.plugin.Plugin;
 import com.libnexus.boidsimulator.console.Console;
 import com.libnexus.boidsimulator.console.ConsoleMessage;
 import com.libnexus.boidsimulator.console.ConsoleString;
@@ -92,9 +91,9 @@ public class DefaultCommandSet {
     @Command(name = "killall", description = "kills all boids")
     public void killAll() {
         int count = World.GRID.boids().size();
-        for (Boid boid : new HashSet<>(World.GRID.boids()))
-            World.GRID.remove(boid);
-        console.log("killed ", Color.GREEN, String.valueOf(World.GRID.boids().size() - count), Color.WHITE, " boids");
+        for (BoidAgency agency : World.boidAgencies())
+            agency.killAll();
+        console.log("killed ", Color.GREEN, String.valueOf(count - World.GRID.boids().size()), Color.WHITE, " boids");
     }
 
     @Command(name = "killall", description = "kills all boids of a given agency qualifier")
@@ -103,8 +102,9 @@ public class DefaultCommandSet {
         if (boidAgency == null) {
             console.error(Color.RED, qualifier, Color.WHITE, " is not a boid qualifier");
         } else {
+            int count = World.GRID.boids().size();
             boidAgency.killAll();
-            console.log("killed ", Color.GREEN, "TODOFIXMATRIX", Color.WHITE, " boids");
+            console.log("killed ", Color.GREEN, String.valueOf(count - World.GRID.boids().size()), Color.WHITE, " boids");
         }
     }
 
@@ -117,7 +117,7 @@ public class DefaultCommandSet {
     public void boids() {
         HashMap<BoidAgency, Integer> agencyCounts = new HashMap<>();
 
-        for (Boid boid : World.boids()) {
+        for (Boid boid : World.GRID.boids()) {
             agencyCounts.merge(boid.agency, 1, Integer::sum);
         }
 
@@ -127,7 +127,7 @@ public class DefaultCommandSet {
             console.log("- ", Color.CYAN, agencyCount.getKey().name(), Color.WHITE, " : ", String.valueOf(agencyCount.getValue()));
         }
 
-        console.log("Total ", Color.GREEN, "TODOFIXMATRIX", Color.WHITE, " boids");
+        console.log("Total ", Color.GREEN, String.valueOf(World.GRID.boids().size()), Color.WHITE, " boids");
     }
 
     @Command(name = "inspect", description = "inspects the selected boid for a given stat name in 3")
@@ -162,26 +162,6 @@ public class DefaultCommandSet {
     @Command(name = "clear", description = "clears the console log")
     public void clear() {
         console.messages.clear();
-    }
-
-    @Command(name = "plugins", description = "displays a list of the loaded plugins")
-    public void plugins() {
-        List<ConsoleString> messageParts = new LinkedList<>();
-
-        for (Iterator<Plugin> pluginIterator = console.simulator.pluginManager.plugins().iterator(); pluginIterator.hasNext(); ) {
-            Plugin plugin = pluginIterator.next();
-            messageParts.add(new ConsoleString(plugin.name(), Color.CYAN));
-            if (pluginIterator.hasNext())
-                messageParts.add(new ConsoleString(", "));
-        }
-
-        console.addMessage(new ConsoleMessage(null, null, messageParts));
-    }
-
-    @Command(name = "reload", description = "reloads all plugins")
-    public void reload() {
-        console.simulator.pluginManager.reloadPlugins();
-        console.log(Color.CYAN, "reload complete");
     }
 
     @Command(name = "spawn", description = "displays all the attributes for the spawn commands")

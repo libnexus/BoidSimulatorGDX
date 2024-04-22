@@ -4,8 +4,6 @@ import com.badlogic.gdx.Input;
 import com.libnexus.boidsimulator.util.Vector2f;
 import com.libnexus.boidsimulator.world.World;
 
-import java.util.HashSet;
-
 public class DefaultBoidAgency extends BoidAgency {
     public static final DefaultBoidAgency INSTANCE = new DefaultBoidAgency();
 
@@ -40,19 +38,16 @@ public class DefaultBoidAgency extends BoidAgency {
 
     @Override
     public void killAll() {
-        for (Boid boid : World.getBoidsOfAgency(this)) {
-            if (boid.getClass() == Boid.class)
-                World.GRID.remove(boid);
-        }
+
     }
 
     @Override
     public void kill(Boid boid) {
-        World.GRID.remove(boid);
+
     }
 
     public void setCurrValues(String name, float value) {
-        for (Boid boid : World.GRID.boids()) {
+        for (Boid boid : World.boids()) {
             switch (name) {
                 case "op:boost": {
                     boid.currVelocity.multiplyBy(value);

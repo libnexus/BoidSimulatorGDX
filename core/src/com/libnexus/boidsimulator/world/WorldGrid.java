@@ -5,7 +5,6 @@ import com.libnexus.boidsimulator.entity.boid.Boid;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.Vector;
 
 public class WorldGrid {
     private final int width, height;
@@ -71,45 +70,21 @@ public class WorldGrid {
     /**
      * Assumes the boid is within the width and height specified
      *
-     * @param boid the boid to place in the world
-     *
-     * @return if the boid moved or not
+     * @param boid
      */
     public void place(Boid boid) {
-        WorldCell boidLocation = normalizedBoidLocation(boid);
+        int i = Math.floorDiv((int) boid.currLocation.y + size, size);
+        int j = Math.floorDiv((int) boid.currLocation.x + size, size);
 
-        if (boid.worldCell != null)
-            boid.worldCell.boids.remove(boid);
-        boid.worldCell = boidLocation;
-        boidLocation.boids.add(boid);
+        boid.worldCell = cells[i][j];
+        cells[i][j].boids.add(boid);
 
         boids.add(boid);
     }
 
-    public boolean migrated(Boid boid) {
-        WorldCell boidLocation = normalizedBoidLocation(boid);
-        return boid.worldCell != boidLocation;
-    }
-
-    public WorldCell normalizedBoidLocation(Boid boid) {
-        int i = Math.floorDiv((int) boid.currLocation.y + size, size);
-        int j = Math.floorDiv((int) boid.currLocation.x + size, size);
-        if (i < 0)
-            i = 0;
-        if (i > cells.length - 1)
-            i = cells.length - 1;
-        if (j < 0)
-            j = 0;
-        if (j > cells[i].length - 1)
-            j = cells[i].length - 1;
-        return cells[i][j];
-    }
-
     public void remove(Boid boid) {
         boid.worldCell.boids.remove(boid);
-        boid.worldCell.pickup.remove(boid);
         boid.worldCell = null;
-        boids.remove(boid);
     }
 
     public Set<Boid> boids() {
