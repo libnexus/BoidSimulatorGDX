@@ -1,7 +1,7 @@
-package com.libnexus.boidsimulator.future.engine;
+package com.libnexus.future.boidsimulator.engine;
 
-import com.libnexus.boidsimulator.future.util.Colour;
-import com.libnexus.boidsimulator.future.util.Vec2f;
+import com.libnexus.future.boidsimulator.util.Colour;
+import com.libnexus.future.boidsimulator.util.Vec2f;
 
 public interface CanvasArtist {
     void drawCircle(Colour colour, float x, float y, float radius, float margin);

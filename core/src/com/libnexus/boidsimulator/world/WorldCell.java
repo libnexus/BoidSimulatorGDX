@@ -76,23 +76,18 @@ public class WorldCell {
     }
 
     public void forEachBoidNeighbour(Consumer<Boid> lambda) {
-        boids.forEach(lambda);
-        if (north != null)
-            north.boids.forEach(lambda);
-        if (northEast != null)
-            northEast.boids.forEach(lambda);
-        if (east != null)
-            east.boids.forEach(lambda);
-        if (southEast != null)
-            southEast.boids.forEach(lambda);
-        if (south != null)
-            south.boids.forEach(lambda);
-        if (southWest != null)
-            southWest.boids.forEach(lambda);
-        if (west != null)
-            west.boids.forEach(lambda);
-        if (northWest != null)
-            northWest.boids.forEach(lambda);
+        Consumer<Boid> aliveBoid = boid -> {
+            if (boid.worldCell != null) lambda.accept(boid);
+        };
+        boids.forEach(aliveBoid);
+        if (north != null) north.boids.forEach(aliveBoid);
+        if (northEast != null) northEast.boids.forEach(aliveBoid);
+        if (east != null) east.boids.forEach(aliveBoid);
+        if (southEast != null) southEast.boids.forEach(aliveBoid);
+        if (south != null) south.boids.forEach(aliveBoid);
+        if (southWest != null) southWest.boids.forEach(aliveBoid);
+        if (west != null) west.boids.forEach(aliveBoid);
+        if (northWest != null) northWest.boids.forEach(aliveBoid);
     }
 
     @Override

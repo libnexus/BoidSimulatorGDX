@@ -5,7 +5,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
-import com.libnexus.boidsimulator.entity.obstacle.Obstacle;
 import com.libnexus.boidsimulator.util.ColorUtils;
 import com.libnexus.boidsimulator.util.Vector2f;
 import com.libnexus.boidsimulator.world.World;

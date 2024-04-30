@@ -16,7 +16,10 @@ import com.libnexus.boidsimulator.util.ColorUtils;
 import com.libnexus.boidsimulator.util.Vector2f;
 import com.libnexus.boidsimulator.world.World;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import static com.badlogic.gdx.math.MathUtils.random;
 

@@ -36,7 +36,10 @@ public abstract class Plugin {
     public final List<Boid> getBoids() {
         return boids;
     }
-    public final Set<Boid> getAllBoids() { return World.GRID.boids(); }
+
+    public final Set<Boid> getAllBoids() {
+        return World.GRID.boids();
+    }
 
 
     public final List<Boid> getBoidsOfClass(Class<? extends Boid> boidClass) {

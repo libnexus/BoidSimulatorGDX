@@ -1,7 +1,7 @@
-package com.libnexus.boidsimulator.future.entity.boid;
+package com.libnexus.future.boidsimulator.entity.boid;
 
-import com.libnexus.boidsimulator.future.engine.CanvasArtist;
-import com.libnexus.boidsimulator.future.util.Vec2f;
+import com.libnexus.future.boidsimulator.engine.CanvasArtist;
+import com.libnexus.future.boidsimulator.util.Vec2f;
 
 /**
  * An abstract representation of what a boid must be able to do for it to be able to

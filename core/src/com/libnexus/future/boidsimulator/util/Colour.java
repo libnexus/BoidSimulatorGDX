@@ -1,4 +1,4 @@
-package com.libnexus.boidsimulator.future.util;
+package com.libnexus.future.boidsimulator.util;
 
 /**
  * The colour utility class for interacting with the displayed aspects of the simulator

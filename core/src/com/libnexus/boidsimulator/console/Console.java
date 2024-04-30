@@ -215,11 +215,11 @@ public class Console {
             return "";
 
         if (cursor < drawableInput.length() / 2) {
-            while (notFitInInput(drawableInput.toString())) {
+            while (!drawableInput.isEmpty() &&notFitInInput(drawableInput.toString())) {
                 drawableInput.deleteCharAt(drawableInput.length() - 1);
             }
         } else {
-            while (notFitInInput(drawableInput.toString())) {
+            while (!drawableInput.isEmpty() && notFitInInput(drawableInput.toString())) {
                 drawableInput.deleteCharAt(0);
             }
         }
